@@ -56,6 +56,7 @@ router.post('/summarize', newsAiLimiter, async (req: Request, res: Response) => 
     const source = typeof req.body?.source === 'string' ? req.body.source.trim().slice(0, 120) : 'Wire';
     const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim().slice(0, 40) : 'Top Story';
     const snippet = typeof req.body?.snippet === 'string' ? req.body.snippet.trim().slice(0, 2000) : '';
+    const originalUrl = typeof req.body?.originalUrl === 'string' ? req.body.originalUrl.trim().slice(0, 1000) : '';
     const voice = parseVoice(req.body?.voice);
 
     if (!id || !headline) {
@@ -69,6 +70,7 @@ router.post('/summarize', newsAiLimiter, async (req: Request, res: Response) => 
       source,
       headline,
       snippet,
+      originalUrl,
       voice,
     });
     res.status(200).json(result);

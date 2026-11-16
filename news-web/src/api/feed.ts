@@ -82,6 +82,7 @@ export async function summarizeStoryWithAi(
   bodyParagraphs: string[];
   pullQuote?: string;
   aiGenerated: boolean;
+  fullArticleLoaded?: boolean;
 }> {
   const snippet = story.bodyParagraphs[0] || story.summaryByStyle.brief || '';
   const response = await fetch(`${getApiBaseUrl()}/api/news/summarize`, {
@@ -93,6 +94,7 @@ export async function summarizeStoryWithAi(
       source: story.source,
       headline: story.headline,
       snippet,
+      originalUrl: story.originalUrl,
       voice,
     }),
   });

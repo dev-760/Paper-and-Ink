@@ -59,7 +59,7 @@ export const Notebook: React.FC<NotebookProps> = ({
     if (!notebook) return [];
     return pages
       .filter((p) => p.notebookId === notebook.id)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }, [pages, notebook]);
 
   const filteredPages = useMemo(() => {

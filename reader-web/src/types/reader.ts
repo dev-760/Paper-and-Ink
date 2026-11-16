@@ -35,6 +35,8 @@ export interface Book {
   author: string;
   year?: string;
   description: string;
+  aiBrief?: string;
+  aiThemes?: string[];
   totalPages: number;
   isFullSample?: boolean;
   progressPercent: number;

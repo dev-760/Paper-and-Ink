@@ -4,6 +4,7 @@ import { PaperSurface } from '../../components/PaperSurface';
 
 export interface TypingEditorProps {
   content: string;
+  barePaper?: boolean;
   onChange: (nextContent: string) => void;
 }
 
@@ -15,6 +16,7 @@ interface ChecklistEntry {
 
 export const TypingEditor: React.FC<TypingEditorProps> = ({
   content,
+  barePaper = false,
   onChange,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -71,55 +73,63 @@ export const TypingEditor: React.FC<TypingEditorProps> = ({
     });
   };
 
+  const editorInner = (
+    <div className={barePaper ? 'w-full' : 'max-w-[68ch] mx-auto'}>
+      <textarea
+        ref={textareaRef}
+        value={content}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Note body"
+        placeholder="Begin writing on the page… Use ## for headings, - for bullets, or - [ ] for checkboxes."
+        rows={14}
+        className="pi-focusable w-full min-h-[380px] sm:min-h-[460px] bg-transparent border-0 resize-y outline-none pi-prose text-[var(--text-primary)] placeholder:text-[var(--text-muted)]/75 leading-[32px]"
+      />
+
+      {/* Quiet minimal block helpers tucked at bottom of sheet */}
+      <div className="mt-3 pt-2.5 border-t border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            type="button"
+            onClick={() => insertPrefixAtCursor('## ')}
+            className="pi-focusable inline-flex items-center gap-1.5 min-h-[38px] px-2.5 rounded-full text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-pill)] transition-colors cursor-pointer"
+          >
+            <Heading2 className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Heading</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => insertPrefixAtCursor('- ')}
+            className="pi-focusable inline-flex items-center gap-1.5 min-h-[38px] px-2.5 rounded-full text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-pill)] transition-colors cursor-pointer"
+          >
+            <List className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Bullet</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => insertPrefixAtCursor('- [ ] ')}
+            className="pi-focusable inline-flex items-center gap-1.5 min-h-[38px] px-2.5 rounded-full text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-pill)] transition-colors cursor-pointer"
+          >
+            <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Checkbox</span>
+          </button>
+        </div>
+
+        <span className="pi-meta pi-tabular text-[var(--text-muted)]">
+          {content.trim() ? `${content.trim().split(/\s+/).length} words` : 'Blank page'}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      <PaperSurface lined showMarginLine className="px-5 sm:px-14 py-7 sm:py-9">
-        <div className="max-w-[68ch] mx-auto">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => onChange(e.target.value)}
-            aria-label="Note body"
-            placeholder="Begin writing on the page… Use ## for headings, - for bullets, or - [ ] for checkboxes."
-            rows={16}
-            className="pi-focusable w-full min-h-[420px] sm:min-h-[500px] bg-transparent border-0 resize-y outline-none pi-prose text-[var(--text-primary)] placeholder:text-[var(--text-muted)]/75 leading-[32px]"
-          />
-
-          {/* Quiet minimal block helpers tucked at bottom of sheet */}
-          <div className="mt-4 pt-3 border-t border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => insertPrefixAtCursor('## ')}
-                className="pi-focusable inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-full text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-pill)] transition-colors cursor-pointer"
-              >
-                <Heading2 className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Heading</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => insertPrefixAtCursor('- ')}
-                className="pi-focusable inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-full text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-pill)] transition-colors cursor-pointer"
-              >
-                <List className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Bullet</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => insertPrefixAtCursor('- [ ] ')}
-                className="pi-focusable inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-full text-[12px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-pill)] transition-colors cursor-pointer"
-              >
-                <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Checkbox</span>
-              </button>
-            </div>
-
-            <span className="pi-meta pi-tabular text-[var(--text-muted)]">
-              {content.trim() ? `${content.trim().split(/\s+/).length} words` : 'Blank page'}
-            </span>
-          </div>
-        </div>
-      </PaperSurface>
+      {barePaper ? (
+        editorInner
+      ) : (
+        <PaperSurface lined showMarginLine className="px-5 sm:px-14 py-7 sm:py-9">
+          {editorInner}
+        </PaperSurface>
+      )}
 
       {/* Interactive checklist toggles synced with markdown lines */}
       {checklistEntries.length > 0 && (

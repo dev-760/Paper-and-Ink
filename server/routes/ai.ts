@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createRateLimiter } from '../middleware/rateLimit.ts';
+import { generateBookBrief } from '../services/ai/book-brief.ts';
 import { transcribeHandwrittenNote } from '../services/ai/ocr.ts';
 import { extractPdfPagesWithAi } from '../services/ai/pdf-extraction.ts';
 
@@ -64,6 +65,44 @@ router.post('/pdf-extract', aiLimiter, async (req: Request, res: Response) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'PDF text extraction failed.';
     const isValidation = /must have|at most|at least|invalid|oversized/i.test(message);
+    res.status(isValidation ? 400 : 502).json({ error: message });
+  }
+});
+
+/**
+ * POST /api/ai/book-brief
+ * Generates an editorial AI brief and theme tags for an imported Reader book.
+ */
+router.post('/book-brief', aiLimiter, async (req: Request, res: Response) => {
+  try {
+    const title = typeof req.body?.title === 'string' ? req.body.title.trim() : '';
+    const author = typeof req.body?.author === 'string' ? req.body.author.trim() : undefined;
+    const totalPages =
+      typeof req.body?.totalPages === 'number' && Number.isFinite(req.body.totalPages)
+        ? req.body.totalPages
+        : undefined;
+    const chapterTitles = Array.isArray(req.body?.chapterTitles)
+      ? req.body.chapterTitles.filter((c: unknown): c is string => typeof c === 'string')
+      : undefined;
+    const excerpt = typeof req.body?.excerpt === 'string' ? req.body.excerpt.trim() : '';
+
+    if (!title || !excerpt) {
+      res.status(400).json({ error: 'Book title and text excerpt are required.' });
+      return;
+    }
+
+    const result = await generateBookBrief({
+      title,
+      author,
+      totalPages,
+      chapterTitles,
+      excerpt,
+    });
+
+    res.status(200).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Could not generate AI book brief.';
+    const isValidation = /required/i.test(message);
     res.status(isValidation ? 400 : 502).json({ error: message });
   }
 });

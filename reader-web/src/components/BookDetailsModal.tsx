@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
-import { BookOpen, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BookOpen, RefreshCw, Sparkles, X } from 'lucide-react';
+import { applyBriefToBook, requestBookBrief } from '../lib/bookBrief';
+import { isRtlText } from '../lib/bookImportUtils';
 import type { Book, Shelf } from '../types/reader';
 
 interface BookDetailsModalProps {
@@ -7,6 +9,7 @@ interface BookDetailsModalProps {
   shelf?: Shelf;
   shelves?: Shelf[];
   onMoveToShelf?: (bookId: string, shelfId: string) => void;
+  onUpdateBookBrief?: (updatedBook: Book) => Promise<void>;
   onClose: () => void;
   onReadBook: (book: Book) => void;
   onDownloadPdf?: (book: Book) => Promise<boolean>;
@@ -17,10 +20,19 @@ export const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
   shelf,
   shelves = [],
   onMoveToShelf,
+  onUpdateBookBrief,
   onClose,
   onReadBook,
   onDownloadPdf,
 }) => {
+  const [generatingBrief, setGeneratingBrief] = useState(false);
+  const [briefError, setBriefError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setBriefError(null);
+    setGeneratingBrief(false);
+  }, [book?.id]);
+
   useEffect(() => {
     if (!book) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -62,6 +74,7 @@ export const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
             )}
             <h2
               id="book-details-title"
+              dir={isRtlText(book.title) ? 'rtl' : 'ltr'}
               className="font-headline mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl"
             >
               {book.title}
@@ -109,16 +122,78 @@ export const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
           )}
         </div>
 
-        {/* Description */}
-        <p className="mt-4 font-reading-serif text-[16px] leading-relaxed text-[var(--pi-ink)] dark:text-[var(--pi-ink-on-dark)]">
-          {book.description}
-        </p>
+        {/* Editorial AI Brief / Description */}
+        <div className="mt-4 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 pi-label text-[var(--pi-terracotta)]">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{book.aiBrief ? 'AI Book Brief' : 'About this book'}</span>
+            </span>
 
-        {!book.isFullSample && (
-          <p className="mt-3 text-xs text-[var(--pi-ink-muted)] dark:text-[var(--pi-ink-on-dark-muted)]">
-            Opening excerpt included. Use Add Books below to import your own PDFs locally.
+            {onUpdateBookBrief && book.chapters.length > 0 && (
+              <button
+                type="button"
+                disabled={generatingBrief}
+                onClick={async () => {
+                  setBriefError(null);
+                  setGeneratingBrief(true);
+                  try {
+                    const result = await requestBookBrief({
+                      title: book.title,
+                      author: book.author,
+                      totalPages: book.totalPages,
+                      chapters: book.chapters,
+                    });
+                    await onUpdateBookBrief(applyBriefToBook(book, result));
+                  } catch (err) {
+                    setBriefError(
+                      err instanceof Error ? err.message : 'Unable to generate book brief.',
+                    );
+                  } finally {
+                    setGeneratingBrief(false);
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-[var(--pi-hairline-strong)] px-3 py-1 text-[11px] font-medium text-[var(--pi-ink-muted)] hover:bg-[var(--pi-paper-muted)] dark:text-[var(--pi-ink-on-dark-muted)] dark:hover:bg-white/10 disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw
+                  className={`h-3 w-3 ${generatingBrief ? 'animate-spin' : ''}`}
+                  aria-hidden="true"
+                />
+                <span>
+                  {generatingBrief
+                    ? 'Writing brief…'
+                    : book.aiBrief
+                      ? 'Refresh brief'
+                      : 'Create AI brief'}
+                </span>
+              </button>
+            )}
+          </div>
+
+          <p
+            dir={isRtlText(book.aiBrief || book.description) ? 'rtl' : 'ltr'}
+            className="font-reading-serif text-[16px] leading-relaxed text-[var(--pi-ink)] dark:text-[var(--pi-ink-on-dark)]"
+          >
+            {book.aiBrief || book.description}
           </p>
-        )}
+
+          {book.aiThemes && book.aiThemes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {book.aiThemes.map((theme) => (
+                <span
+                  key={theme}
+                  className="rounded-full border border-[var(--pi-hairline-strong)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--pi-ink-muted)] dark:text-[var(--pi-ink-on-dark-muted)]"
+                >
+                  {theme}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {briefError && (
+            <p className="text-xs text-[#B83B2B]">{briefError}</p>
+          )}
+        </div>
 
         {shelves.length > 0 && onMoveToShelf && (
           <div className="mt-5 border-t border-[var(--pi-hairline)] pt-4">

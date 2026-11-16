@@ -88,18 +88,21 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ story }) => {
   const topicMeta = TOPICS.find((t) => t.id === story.topic);
   const activeVoice = WRITING_STYLES.find((v) => v.id === writingStyle) ?? WRITING_STYLES[0];
   const palette = THEME_CLASSES[theme];
-  const activeParagraphs =
+  const rawParagraphs =
     story.bodyByStyle?.[writingStyle] && story.bodyByStyle[writingStyle]!.length > 0
       ? story.bodyByStyle[writingStyle]!
       : story.bodyParagraphs;
+  const activeParagraphs = rawParagraphs.filter(
+    (p) => !/^Reported via (?:NewsData\.io|Mediastack)\b/i.test(p.trim()),
+  );
   const activeLead = story.summaryByStyle[writingStyle] || story.summaryByStyle.brief;
 
   useEffect(() => {
     setImageFailed(false);
-    if (!story.rewrittenVoices?.includes(writingStyle)) {
+    if (!story.fullArticleLoaded || !story.rewrittenVoices?.includes(writingStyle)) {
       void enrichStoryWithAi(story.id, writingStyle);
     }
-  }, [story.id, writingStyle, story.rewrittenVoices, enrichStoryWithAi]);
+  }, [story.id, writingStyle, story.fullArticleLoaded, story.rewrittenVoices, enrichStoryWithAi]);
 
   const nextStory = useMemo(() => {
     const pool = stories.length > 1 ? stories : livePool;
@@ -214,33 +217,6 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ story }) => {
             </figure>
           )}
 
-          {/* Voice Selection & AI Rewrite Indicator */}
-          <div className={`mb-7 flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-4 py-3 ${palette.sheet}`}>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--pi-accent)]">
-              <Sparkles className={`h-3.5 w-3.5 ${isEnriching ? 'animate-pulse' : ''}`} />
-              {isEnriching
-                ? `Rewriting in ${activeVoice.label} Voice…`
-                : `Written in ${activeVoice.label} Voice`}
-            </span>
-
-            <div className="flex flex-wrap items-center gap-1">
-              {WRITING_STYLES.map((v) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  onClick={() => setWritingStyle(v.id)}
-                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
-                    writingStyle === v.id
-                      ? 'bg-[var(--pi-accent)] text-white'
-                      : 'opacity-65 hover:opacity-100'
-                  }`}
-                >
-                  {v.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {activeLead && activeParagraphs[0] !== activeLead && (
             <p className={`mb-6 font-headline text-lg sm:text-xl leading-relaxed ${palette.muted}`}>
               {activeLead}
@@ -261,6 +237,11 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ story }) => {
                 )}
               </React.Fragment>
             ))}
+            {isEnriching && !story.fullArticleLoaded && (
+              <p className={`text-sm italic animate-pulse ${palette.muted}`}>
+                Loading full reporting…
+              </p>
+            )}
           </div>
 
           {/* Bottom Next Story Navigation */}

@@ -55,6 +55,7 @@ export interface EnrichedNewsStory {
   readMinutes: number;
   layoutVariant: 'featured' | 'image' | 'typography';
   aiGenerated: boolean;
+  fullArticleLoaded?: boolean;
 }
 
 export interface ProviderFetchResult {

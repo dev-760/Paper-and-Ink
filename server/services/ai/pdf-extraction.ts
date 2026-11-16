@@ -40,9 +40,10 @@ export async function extractPdfPagesWithAi(options: {
       text: [
         titleHint ? `Document filename/title hint: ${titleHint.slice(0, 140)}` : '',
         'Extract clean, readable book prose from each PDF page below.',
+        'Always preserve the exact original script and language of the book (e.g. Arabic, Japanese, English) without translating.',
         'Remove running headers, page numbers, and hyphenated line-break artifacts where obvious, joining broken lines into natural paragraphs separated by blank lines (\\n\\n).',
-        'Preserve exact book meaning without summarizing or omitting text.',
-        'Identify any chapter heading starting on a page (or null if none).',
+        'Preserve exact book meaning, dialogue punctuation, and wording without summarizing or omitting text.',
+        'Identify any chapter, part, prologue, or epilogue heading starting on a page in the original language (e.g. "PROLOGUE", "THE FIRST NOTEBOOK", "الفصل الأول", or null if none).',
         'Return strict JSON with keys:',
         '{"detectedTitle": string | null, "detectedAuthor": string | null, "pages": [{"pageNumber": number, "chapterHeading": string | null, "text": string}]}.',
       ]
@@ -89,8 +90,14 @@ export async function extractPdfPagesWithAi(options: {
     messages: [
       {
         role: 'system',
-        content:
-          'You are a careful editorial book-digitization assistant for Paper & Ink Reader. Output clean, faithful plain-text book prose structured strictly as valid JSON. Never include chain-of-thought or commentary.',
+        content: [
+          'You are an archival book-digitization and scholarly typesetting specialist for Paper & Ink Reader.',
+          'Accurately transcribe and reconstruct clean, book-grade reflowable prose from scanned page images or messy embedded PDF text.',
+          'FIDELITY & SCRIPT RULE: Preserve the exact original language, script, spelling, punctuation, dialogue marks, and Arabic diacritics/tashkeel where present — never translate, summarize, modernize, or invent missing lines.',
+          'LAYOUT CLEANUP: Read multi-column pages in true reading order, strip running page headers/footers and isolated page numbers, rejoin end-of-line hyphenated words where clearly split, and separate natural paragraphs with double newlines (\\n\\n).',
+          'BOOK STRUCTURE: Populate "detectedTitle" and "detectedAuthor" ONLY when visibly printed on a cover, title page, or running book plate (otherwise null). Identify any chapter, prologue, epilogue, notebook, or part heading starting on a page in its original script inside "chapterHeading" (otherwise null).',
+          'Output strictly valid JSON matching the requested schema. Never include chain-of-thought or commentary.',
+        ].join(' '),
       },
       {
         role: 'user',

@@ -159,6 +159,14 @@ export default function App() {
     [storage],
   );
 
+  const handleUpdateBookBrief = useCallback(
+    async (updatedBook: Book) => {
+      setBooks((prev) => prev.map((b) => (b.id === updatedBook.id ? updatedBook : b)));
+      await storage.saveImportedBook(updatedBook);
+    },
+    [storage],
+  );
+
   const handleDownloadOriginalPdf = useCallback(
     async (book: Book) => {
       const buffer = await storage.getPdfFile(book.id);
@@ -297,6 +305,7 @@ export default function App() {
       onSaveShelf={handleSaveShelf}
       onDeleteShelf={handleDeleteShelf}
       onMoveBookToShelf={handleMoveBookToShelf}
+      onUpdateBookBrief={handleUpdateBookBrief}
     />
   );
 

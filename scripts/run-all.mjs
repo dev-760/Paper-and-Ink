@@ -48,7 +48,7 @@ if (mode === 'dev') {
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 } else if (mode === 'build') {
-  await runNode([path.join(rootDir, 'node_modules', 'typescript', 'bin', 'tsc'), '-p', 'server/tsconfig.json', '--noEmit'], 'server typecheck');
+  await runNode([path.join(rootDir, 'node_modules', 'typescript', 'bin', 'tsc'), '-p', 'server/tsconfig.build.json'], 'server build');
   for (const app of ['reader', 'notes', 'news']) {
     await runNode([path.join(rootDir, 'scripts', 'run-app.mjs'), app, 'build'], `${app} build`);
   }

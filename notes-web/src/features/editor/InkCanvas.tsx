@@ -18,6 +18,7 @@ export interface InkCanvasProps {
   strokes: InkStroke[];
   theme: 'light' | 'dark';
   isConverting: boolean;
+  barePaper?: boolean;
   onStrokesChange: (nextStrokes: InkStroke[]) => void;
   onConvert: () => void;
 }
@@ -27,6 +28,7 @@ export const InkCanvas: React.FC<InkCanvasProps> = ({
   strokes,
   theme,
   isConverting,
+  barePaper = false,
   onStrokesChange,
   onConvert,
 }) => {
@@ -372,6 +374,39 @@ export const InkCanvas: React.FC<InkCanvasProps> = ({
     onStrokesChange(next);
   };
 
+  const inkStage = (
+    <div
+      ref={stageRef}
+      className="relative w-full aspect-[800/1120] select-none"
+    >
+      <canvas
+        ref={committedCanvasRef}
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full pointer-events-none"
+      />
+      <canvas
+        ref={activeCanvasRef}
+        role="img"
+        aria-label="Handwriting ink canvas. Use a stylus to draw, or finger touch to scroll the page."
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={finishStroke}
+        onPointerCancel={finishStroke}
+        style={{
+          // Finger scrolling remains natural (pan-y); stylus events are captured in JS
+          touchAction: 'pan-y',
+          cursor:
+            activeTool === 'eraser'
+              ? 'cell'
+              : allowMouseFallback
+                ? 'crosshair'
+                : 'default',
+        }}
+        className="absolute inset-0 w-full h-full"
+      />
+    </div>
+  );
+
   return (
     <div className="relative pb-24">
       {/* Quiet hardware capability & palm-rejection bar */}
@@ -396,44 +431,19 @@ export const InkCanvas: React.FC<InkCanvasProps> = ({
         >
           <MousePointer2 className="w-3.5 h-3.5" aria-hidden="true" />
           <span>
-            {allowMouseFallback ? 'Mouse test on' : 'Test with mouse'}
+            {allowMouseFallback ? 'Mouse ink on' : 'Draw with mouse'}
           </span>
         </button>
       </div>
 
       {/* Lined Paper Writing Surface */}
-      <PaperSurface lined showMarginLine className="overflow-hidden">
-        <div
-          ref={stageRef}
-          className="relative w-full aspect-[800/1120] select-none"
-        >
-          <canvas
-            ref={committedCanvasRef}
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full pointer-events-none"
-          />
-          <canvas
-            ref={activeCanvasRef}
-            role="img"
-            aria-label="Handwriting ink canvas. Use a stylus to draw, or finger touch to scroll the page."
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={finishStroke}
-            onPointerCancel={finishStroke}
-            style={{
-              // Finger scrolling remains natural (pan-y); stylus events are captured in JS
-              touchAction: 'pan-y',
-              cursor:
-                activeTool === 'eraser'
-                  ? 'cell'
-                  : allowMouseFallback
-                    ? 'crosshair'
-                    : 'default',
-            }}
-            className="absolute inset-0 w-full h-full"
-          />
-        </div>
-      </PaperSurface>
+      {barePaper ? (
+        inkStage
+      ) : (
+        <PaperSurface lined showMarginLine className="overflow-hidden">
+          {inkStage}
+        </PaperSurface>
+      )}
 
       {/* Floating black pill toolbar positioned in thumb-friendly lower zone */}
       <div className="sticky bottom-4 z-20 mt-4 flex justify-center md:justify-end pointer-events-none">

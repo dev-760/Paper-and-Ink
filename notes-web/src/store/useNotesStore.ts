@@ -549,13 +549,13 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     const { pages } = get();
     const notebookPages = pages
       .filter((p) => p.notebookId === notebookId)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     const firstPage = notebookPages[0] ?? null;
 
     set({
       activeNotebookId: notebookId,
       activePageId: firstPage ? firstPage.id : null,
-      activeScreen: 'notebook',
+      activeScreen: 'editor',
       pageSearchQuery: '',
       editorMode:
         firstPage && firstPage.inkStrokes.length > 0 && !firstPage.content.trim()

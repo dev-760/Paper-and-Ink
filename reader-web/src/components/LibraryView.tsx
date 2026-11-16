@@ -7,7 +7,6 @@ import type { Book, Shelf } from '../types/reader';
 import { AcrylicShelf, AcrylicShelfSkeleton } from './AcrylicShelf';
 import { BookDetailsModal } from './BookDetailsModal';
 import { PdfImportModal } from './PdfImportModal';
-import { PWAInstallButton } from './PWAInstallButton';
 import { ShelfModal } from './ShelfModal';
 
 interface LibraryViewProps {
@@ -30,6 +29,7 @@ interface LibraryViewProps {
   }) => Promise<void>;
   onDeleteShelf: (shelfId: string) => Promise<void>;
   onMoveBookToShelf: (bookId: string, shelfId: string) => Promise<void>;
+  onUpdateBookBrief: (book: Book) => Promise<void>;
 }
 
 export const LibraryView: React.FC<LibraryViewProps> = ({
@@ -47,6 +47,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   onSaveShelf,
   onDeleteShelf,
   onMoveBookToShelf,
+  onUpdateBookBrief,
 }) => {
   const [showAddBooksModal, setShowAddBooksModal] = useState(false);
   const [shelfModalOpen, setShelfModalOpen] = useState(false);
@@ -87,8 +88,6 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showAddBooksModal]);
-
-  const sampleBook = books.find((b) => b.isFullSample) ?? books[0];
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -134,7 +133,6 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             onUpdateProfile={auth.updateProfile}
             onLogout={auth.logout}
           />
-          <PWAInstallButton />
           <button
             type="button"
             onClick={onToggleDark}
@@ -315,6 +313,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
         onMoveToShelf={async (bookId, shelfId) => {
           await onMoveBookToShelf(bookId, shelfId);
           setDetailBook((prev) => (prev && prev.id === bookId ? { ...prev, shelfId } : prev));
+        }}
+        onUpdateBookBrief={async (updatedBook) => {
+          await onUpdateBookBrief(updatedBook);
+          setDetailBook((prev) => (prev && prev.id === updatedBook.id ? updatedBook : prev));
         }}
         onClose={() => setDetailBook(null)}
         onReadBook={(book) => {

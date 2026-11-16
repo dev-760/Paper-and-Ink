@@ -163,7 +163,7 @@ export async function getLiveNewsFeed(options?: {
 
   const task = (async () => {
     const { raw, fromCache } = await fetchRawEdition(country, forceRefresh);
-    const stories = await rewriteArticlesForVoice(raw.articles, voice, 6);
+    const stories = await rewriteArticlesForVoice(raw.articles, voice, 4);
 
     return {
       stories,

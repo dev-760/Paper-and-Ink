@@ -1,20 +1,32 @@
 import React from 'react';
 
 export interface ShelfBarProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  emptyText?: string;
   className?: string;
 }
 
 export const ShelfBar: React.FC<ShelfBarProps> = ({
   children,
+  emptyText,
   className = '',
 }) => {
+  const hasChildren = React.Children.count(children) > 0;
+
   return (
     <section className={`relative ${className}`}>
       {/* Horizontally scrolling notebooks matching Paper & Ink Reader shelf */}
-      <div className="pi-shelf-scroll relative z-0 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pt-2 pb-1 sm:gap-6 sm:px-6">
-        {children}
-      </div>
+      {hasChildren ? (
+        <div className="pi-shelf-scroll relative z-0 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pt-2 pb-1 sm:gap-6 sm:px-6">
+          {children}
+        </div>
+      ) : (
+        <div className="relative z-0 flex h-[212px] items-center justify-center px-6 sm:h-[242px]">
+          <p className="text-sm text-[var(--text-secondary)]">
+            {emptyText || 'No notebooks on this shelf yet.'}
+          </p>
+        </div>
+      )}
 
       {/* Translucent Note-app green acrylic shelf bar overlapping lower third of covers */}
       <div

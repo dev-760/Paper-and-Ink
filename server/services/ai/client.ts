@@ -105,7 +105,7 @@ export async function runModelCompletion(options: {
       contents,
       generationConfig: {
         temperature: options.temperature ?? 0.2,
-        maxOutputTokens: options.maxTokens ?? 4096,
+        maxOutputTokens: Math.max(options.maxTokens ?? 4096, 3072),
         ...(options.jsonMode ? { responseMimeType: 'application/json' } : {}),
       },
     }),

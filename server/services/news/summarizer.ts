@@ -1,5 +1,6 @@
 import { serverConfig } from '../../config.ts';
 import { extractJsonObject, runModelCompletion } from '../ai/client.ts';
+import { fetchFullArticleText } from './articleFetcher.ts';
 import type { EnrichedNewsStory, NormalizedArticle, WritingStyle } from './types.ts';
 
 export interface VoiceRewriteResult {
@@ -10,17 +11,18 @@ export interface VoiceRewriteResult {
 
 const VOICE_INSTRUCTIONS: Record<WritingStyle, string> = {
   brief:
-    'VOICE = BRIEF: Rewrite as a crisp wire-service dispatch. Use a tight 1-2 sentence summary and 2-3 short, direct paragraphs delivering the core facts cleanly without fluff.',
+    'VOICE = BRIEF: Write like a crisp Reuters/AP senior wire editor. Front-load the essential who, what, when, and where with economy and precision — clean declarative sentences, exact attribution, zero filler adjectives.',
   explainer:
-    'VOICE = EXPLAINER: Rewrite as a calm, structured explainer. Write a 2-sentence summary plus 3 clear paragraphs covering (1) what is happening, (2) why it matters and its context, and (3) what to watch next.',
+    'VOICE = EXPLAINER: Write with the calm analytical clarity of a top explanatory desk. Unpack (1) what just happened, (2) the institutional, historical, or economic context behind it, and (3) what stakeholders or readers should watch next.',
   witty:
-    'VOICE = WITTY: Rewrite in a dry, restrained, literary editorial voice (like The New Yorker "Talk of the Town" — clever and perceptive, never goofy or slapstick). Write a wry 1-2 sentence lead and 2-3 vivid, engaging paragraphs grounded in the facts.',
+    'VOICE = WITTY: Write with dry, understated, literary magazine wit (think The New Yorker "Talk of the Town" or FT Notebook) — perceptive, crisp, and lightly ironic only where the facts naturally invite it; never cheesy, never slangy, never glib on human tragedy.',
   plain:
-    'VOICE = PLAIN-ENGLISH: Rewrite in warm, everyday plain English free of bureaucratic or technical jargon. Use a simple 1-2 sentence takeaway and 2-3 clear, approachable paragraphs anyone can follow immediately.',
+    'VOICE = PLAIN-ENGLISH: Write in warm, direct, everyday prose accessible to any reader. Translate legal, policy, financial, or scientific jargon cleanly into clear human meaning without talking down.',
 };
 
 // In-memory cache keyed by `${articleId}:${voice}` so switching back to a voice is instant.
 const voiceCache = new Map<string, VoiceRewriteResult>();
+const fullVoiceCache = new Map<string, VoiceRewriteResult & { fullArticleLoaded: boolean }>();
 
 interface BatchRewriteItem {
   id?: string;
@@ -50,7 +52,6 @@ function buildFallbackRewrite(article: NormalizedArticle, voice: WritingStyle): 
       article.description
         ? article.description
         : `${article.source} published coverage on "${article.headline}" under ${article.topic}.`,
-      `Reported via ${article.provider === 'newsdata' ? 'NewsData.io' : 'Mediastack'} (${article.publishedAt}). Open the publisher link below for the complete reporting.`,
     ],
   };
 }
@@ -74,7 +75,8 @@ export function buildStoryForVoice(
   let pullQuote: string | undefined;
 
   for (const v of ['brief', 'explainer', 'witty', 'plain'] as const) {
-    const cached = voiceCache.get(`${article.id}:${v}`);
+    const fullCached = fullVoiceCache.get(`${article.id}:${v}`);
+    const cached = fullCached || voiceCache.get(`${article.id}:${v}`);
     if (cached) {
       summaryByStyle[v] = cached.summary;
       bodyByStyle[v] = cached.bodyParagraphs;
@@ -85,7 +87,8 @@ export function buildStoryForVoice(
     }
   }
 
-  const activeCached = voiceCache.get(`${article.id}:${voice}`);
+  const activeFull = fullVoiceCache.get(`${article.id}:${voice}`);
+  const activeCached = activeFull || voiceCache.get(`${article.id}:${voice}`);
   const bodyParagraphs = activeCached?.bodyParagraphs || buildFallbackRewrite(article, voice).bodyParagraphs;
 
   return {
@@ -103,9 +106,10 @@ export function buildStoryForVoice(
     pullQuote,
     bodyParagraphs,
     publishedAt: article.publishedAt,
-    readMinutes: Math.max(1, Math.min(4, Math.ceil(bodyParagraphs.join(' ').split(/\s+/).length / 130) || 2)),
+    readMinutes: Math.max(1, Math.min(8, Math.ceil(bodyParagraphs.join(' ').split(/\s+/).length / 130) || 2)),
     layoutVariant,
     aiGenerated: rewrittenVoices.includes(voice),
+    fullArticleLoaded: Boolean(activeFull?.fullArticleLoaded),
   };
 }
 
@@ -119,10 +123,10 @@ export async function rewriteArticlesForVoice(
       .slice(0, maxAiArticles)
       .filter((a) => !voiceCache.has(`${a.id}:${voice}`));
 
-    // Process 2 articles per call so each batch completes reliably within output token budget.
+    // Process up to 4 articles in a single call to respect Gemini free-tier RPM/RPD limits.
     const chunks: NormalizedArticle[][] = [];
-    for (let i = 0; i < missingForVoice.length; i += 2) {
-      chunks.push(missingForVoice.slice(i, i + 2));
+    for (let i = 0; i < missingForVoice.length; i += 4) {
+      chunks.push(missingForVoice.slice(i, i + 4));
     }
 
     await Promise.all(
@@ -144,12 +148,12 @@ export async function rewriteArticlesForVoice(
               {
                 role: 'system',
                 content: [
-                  'You are the lead editorial rewriter for Paper & Ink News.',
+                  'You are the Managing Desk Editor for Paper & Ink News — a calm, print-inspired daily edition.',
                   VOICE_INSTRUCTIONS[voice],
-                  'You MUST rewrite BOTH the card summary and the full multi-paragraph article prose directly in the requested voice.',
-                  'STRICT ACCURACY RULE: Base every fact strictly on the provided headline, topic, source, and snippet. Never invent statistics, quotes, or fake interviews.',
-                  'Respond strictly as JSON: {"articles":[{"id":"...","summary":"rewritten 1-2 sentence card lead in the chosen voice","pullQuote":"1 crisp sentence takeaway in the chosen voice","bodyParagraphs":["Rewritten paragraph 1","Rewritten paragraph 2","Rewritten paragraph 3"]}]}',
-                  'Keep the exact id for every article. Never output reasoning.',
+                  'For each article, craft a punchy 1–2 sentence card lead ("summary"), 1 memorable factual "pullQuote" (grounded in real facts or direct quotes from the source), and 3 cohesive editorial paragraphs ("bodyParagraphs").',
+                  'JOURNALISTIC INTEGRITY: Every name, number, date, location, and quote must come strictly from the provided source material — attribute claims cleanly ("officials said", "according to...") and never fabricate statistics, motives, or quotes.',
+                  'HYGIENE & LANGUAGE: Omit cookie prompts, newsletter CTAs, and meta-mentions of NewsData or Mediastack. Preserve non-English regional editions in their source language when supplied.',
+                  'Respond strictly as JSON: {"articles":[{"id":"...","summary":string,"pullQuote":string,"bodyParagraphs":string[]}]}. Keep the exact id for every item. Never output reasoning.',
                 ].join(' '),
               },
               {
@@ -195,6 +199,7 @@ export async function rewriteSingleStoryForVoice(article: {
   source: string;
   headline: string;
   snippet: string;
+  originalUrl?: string;
   voice: WritingStyle;
 }): Promise<{
   voice: WritingStyle;
@@ -202,67 +207,130 @@ export async function rewriteSingleStoryForVoice(article: {
   bodyParagraphs: string[];
   pullQuote?: string;
   aiGenerated: boolean;
+  fullArticleLoaded: boolean;
 }> {
   const cacheKey = `${article.id}:${article.voice}`;
-  const cached = voiceCache.get(cacheKey);
-  if (cached) {
+  const fullCached = fullVoiceCache.get(cacheKey);
+  if (fullCached) {
     return {
       voice: article.voice,
-      summary: cached.summary,
-      bodyParagraphs: cached.bodyParagraphs,
-      pullQuote: cached.pullQuote,
+      summary: fullCached.summary,
+      bodyParagraphs: fullCached.bodyParagraphs,
+      pullQuote: fullCached.pullQuote,
       aiGenerated: true,
+      fullArticleLoaded: fullCached.fullArticleLoaded,
     };
   }
 
-  const raw = await runModelCompletion({
-    jsonMode: true,
-    temperature: article.voice === 'witty' ? 0.5 : 0.3,
-    maxTokens: 4096,
-    messages: [
-      {
-        role: 'system',
-        content: [
-          'You are the lead editorial rewriter for Paper & Ink News.',
-          VOICE_INSTRUCTIONS[article.voice],
-          'Rewrite BOTH the short summary and the complete article body directly in the requested voice.',
-          'Base every fact strictly on the provided headline, source, topic, and snippet without inventing quotes or numbers.',
-          'Respond strictly as JSON: {"summary":string,"pullQuote":string,"bodyParagraphs":string[]}.',
-        ].join(' '),
-      },
-      {
-        role: 'user',
-        content: JSON.stringify(article),
-      },
-    ],
-  });
+  const fetchedArticle = await fetchFullArticleText(article.originalUrl);
+  const hasFullPublisherText = Boolean(fetchedArticle && fetchedArticle.paragraphs.length >= 2);
+  const sourceBody = hasFullPublisherText ? fetchedArticle!.fullText : article.snippet;
 
-  const parsed = extractJsonObject<{
-    summary?: string;
-    pullQuote?: string;
-    bodyParagraphs?: string[];
-  }>(raw);
+  try {
+    const raw = await runModelCompletion({
+      jsonMode: true,
+      temperature: article.voice === 'witty' ? 0.45 : 0.25,
+      maxTokens: 5000,
+      messages: [
+        {
+          role: 'system',
+          content: [
+            'You are the Senior Feature & Dispatch Writer for Paper & Ink News.',
+            VOICE_INSTRUCTIONS[article.voice],
+            hasFullPublisherText
+              ? 'You are provided the complete reporting fetched from the publisher. Compose a complete, deeply readable 5 to 9 paragraph article in the requested voice, preserving all key facts, timeline developments, named sources, figures, and direct quotes cleanly with varied narrative rhythm.'
+              : 'Craft BOTH a crisp 1–2 sentence lead ("summary") and a clean 3-paragraph editorial dispatch grounded strictly in the provided facts.',
+            'JOURNALISTIC INTEGRITY & HYGIENE: Never invent facts, numbers, or quotes absent from the source text; preserve nuanced attribution ("according to...", "officials said"). Strip all subscription prompts, inbox newsletter banners, cookie notices, or references to wire aggregators.',
+            'Also choose 1 incisive factual highlight or real quoted line for "pullQuote" (or empty string if none fits). Preserve the source article language when non-English.',
+            'Respond strictly as JSON: {"summary":string,"pullQuote":string,"bodyParagraphs":string[]}. Never output chain-of-thought.',
+          ].join(' '),
+        },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            topic: article.topic,
+            source: article.source,
+            headline: article.headline,
+            voice: article.voice,
+            ...(hasFullPublisherText
+              ? { fullArticleText: sourceBody }
+              : { snippet: sourceBody || article.headline }),
+          }),
+        },
+      ],
+    });
 
-  const fallbackText = article.snippet || article.headline;
-  const summary =
-    typeof parsed?.summary === 'string' && parsed.summary.trim()
-      ? parsed.summary.trim()
-      : fallbackText;
-  const bodyParagraphs = Array.isArray(parsed?.bodyParagraphs)
-    ? parsed.bodyParagraphs.filter((p): p is string => typeof p === 'string' && p.trim().length > 10).slice(0, 4)
-    : [fallbackText];
-  const pullQuote =
-    typeof parsed?.pullQuote === 'string' && parsed.pullQuote.trim().length > 8
-      ? parsed.pullQuote.trim()
-      : undefined;
+    const parsed = extractJsonObject<{
+      summary?: string;
+      pullQuote?: string;
+      bodyParagraphs?: string[];
+    }>(raw);
 
-  voiceCache.set(cacheKey, { summary, bodyParagraphs, pullQuote });
+    const fallbackParagraphs =
+      hasFullPublisherText && fetchedArticle
+        ? fetchedArticle.paragraphs.slice(0, 18)
+        : [article.snippet || article.headline];
 
-  return {
-    voice: article.voice,
-    summary,
-    bodyParagraphs,
-    pullQuote,
-    aiGenerated: true,
-  };
+    const summary =
+      typeof parsed?.summary === 'string' && parsed.summary.trim()
+        ? parsed.summary.trim()
+        : fallbackParagraphs[0];
+    const aiParagraphs = Array.isArray(parsed?.bodyParagraphs)
+      ? parsed.bodyParagraphs
+          .filter((p): p is string => typeof p === 'string' && p.trim().length > 16)
+          .slice(0, 12)
+      : [];
+
+    const bodyParagraphs =
+      hasFullPublisherText && aiParagraphs.length < 3 && fetchedArticle
+        ? fetchedArticle.paragraphs.slice(0, 18)
+        : aiParagraphs.length > 0
+          ? aiParagraphs
+          : fallbackParagraphs;
+
+    const pullQuote =
+      typeof parsed?.pullQuote === 'string' && parsed.pullQuote.trim().length > 8
+        ? parsed.pullQuote.trim()
+        : undefined;
+
+    const entry = {
+      summary,
+      bodyParagraphs,
+      pullQuote,
+      fullArticleLoaded: true,
+    };
+    fullVoiceCache.set(cacheKey, entry);
+
+    return {
+      voice: article.voice,
+      summary,
+      bodyParagraphs,
+      pullQuote,
+      aiGenerated: true,
+      fullArticleLoaded: true,
+    };
+  } catch {
+    if (hasFullPublisherText && fetchedArticle) {
+      const entry = {
+        summary: article.snippet || fetchedArticle.paragraphs[0],
+        bodyParagraphs: fetchedArticle.paragraphs.slice(0, 18),
+        fullArticleLoaded: true,
+      };
+      fullVoiceCache.set(cacheKey, entry);
+      return {
+        voice: article.voice,
+        ...entry,
+        aiGenerated: false,
+      };
+    }
+
+    // Never fail an article open with HTTP 502 if publisher blocks scraping or AI quota is temporarily exhausted.
+    return {
+      voice: article.voice,
+      summary: article.snippet || article.headline,
+      bodyParagraphs: [article.snippet || article.headline],
+      aiGenerated: false,
+      fullArticleLoaded: true,
+    };
+  }
 }

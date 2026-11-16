@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, Moon, SlidersHorizontal, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { AccountMenu } from '@paper-and-ink/design-system';
 import type { PaperInkAuthState } from '@paper-and-ink/auth';
 import { useNewsStore } from '../store/useNewsStore';
@@ -12,8 +12,6 @@ export const Header: React.FC<HeaderProps> = ({ auth }) => {
   const editionDate = useNewsStore((s) => s.editionDate);
   const theme = useNewsStore((s) => s.theme);
   const toggleDark = useNewsStore((s) => s.toggleDark);
-  const openStyleModal = useNewsStore((s) => s.openStyleModal);
-  const reopenOnboarding = useNewsStore((s) => s.reopenOnboarding);
   const isDark = theme === 'dark';
 
   return (
@@ -39,24 +37,6 @@ export const Header: React.FC<HeaderProps> = ({ auth }) => {
           onUpdateProfile={auth.updateProfile}
           onLogout={auth.logout}
         />
-        <button
-          type="button"
-          onClick={openStyleModal}
-          aria-label="Reading voice and briefing style"
-          title="Reading voice"
-          className="pi-focus-ring flex min-h-[38px] min-w-[38px] items-center justify-center rounded-full border border-[var(--pi-hairline)] bg-[var(--pi-surface)] text-[var(--pi-text)] transition-colors hover:bg-[var(--pi-surface-muted)] cursor-pointer"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={reopenOnboarding}
-          aria-label="Edit beats and welcome guide"
-          title="Personalize beats"
-          className="pi-focus-ring flex min-h-[38px] min-w-[38px] items-center justify-center rounded-full border border-[var(--pi-hairline)] bg-[var(--pi-surface)] text-[var(--pi-text)] transition-colors hover:bg-[var(--pi-surface-muted)] cursor-pointer"
-        >
-          <HelpCircle className="h-4 w-4" />
-        </button>
         <button
           type="button"
           onClick={toggleDark}

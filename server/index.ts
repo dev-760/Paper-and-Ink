@@ -9,6 +9,14 @@ import authRoutes from './routes/auth.ts';
 import newsRoutes from './routes/news.ts';
 
 const app = express();
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
+
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 app.use(
   cors({
@@ -31,11 +39,11 @@ app.use(
 app.use(express.json({ limit: '16mb' }));
 
 app.get('/', (_req, res) => {
-  res.status(200).type('text/plain').send('paper-and-ink-api is running');
+  res.status(200).json({ status: 'ok', service: 'paper-and-ink-api' });
 });
 
 app.get('/api/health', (_req, res) => {
-  res.status(200).type('text/plain').send('paper-and-ink-api is running');
+  res.status(200).json({ status: 'ok', service: 'paper-and-ink-api' });
 });
 
 app.use('/api/auth', authRoutes);
@@ -48,6 +56,15 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   res.status(status).json({ error: message });
 });
 
-app.listen(serverConfig.port, () => {
-  console.log(`[Paper & Ink API] Listening on http://localhost:${serverConfig.port}`);
+const httpServer = app.listen(serverConfig.port, '0.0.0.0', () => {
+  console.log(`[Paper & Ink API] Listening on http://0.0.0.0:${serverConfig.port}`);
 });
+
+const shutdown = () => {
+  httpServer.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

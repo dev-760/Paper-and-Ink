@@ -19,7 +19,7 @@ type ViewportTier = 'phone' | 'tablet' | 'laptop';
 function getViewportTier(): ViewportTier {
   if (typeof window === 'undefined') return 'laptop';
   if (window.matchMedia('(min-width: 1280px)').matches) return 'laptop';
-  if (window.matchMedia('(min-width: 768px)').matches) return 'tablet';
+  if (window.matchMedia('(min-width: 960px)').matches) return 'tablet';
   return 'phone';
 }
 
@@ -28,14 +28,16 @@ function useViewportTier(): ViewportTier {
 
   useEffect(() => {
     const mqLaptop = window.matchMedia('(min-width: 1280px)');
-    const mqTablet = window.matchMedia('(min-width: 768px)');
+    const mqTablet = window.matchMedia('(min-width: 960px)');
 
     const update = () => setTier(getViewportTier());
     mqLaptop.addEventListener('change', update);
     mqTablet.addEventListener('change', update);
+    window.addEventListener('resize', update);
     return () => {
       mqLaptop.removeEventListener('change', update);
       mqTablet.removeEventListener('change', update);
+      window.removeEventListener('resize', update);
     };
   }, []);
 

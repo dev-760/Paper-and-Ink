@@ -361,7 +361,7 @@ export const useNewsStore = create<NewsState>((set, get) => ({
       livePool.find((s) => s.id === storyId) ??
       savedStoriesMap[storyId] ??
       null;
-    if (!story || story.rewrittenVoices?.includes(targetVoice)) return;
+    if (!story || (story.fullArticleLoaded && story.rewrittenVoices?.includes(targetVoice))) return;
 
     set({ enrichingStoryIds: { ...enrichingStoryIds, [lockKey]: true } });
 
@@ -371,6 +371,10 @@ export const useNewsStore = create<NewsState>((set, get) => ({
         if (item.id !== storyId) return item;
         const nextParagraphs =
           enriched.bodyParagraphs.length > 0 ? enriched.bodyParagraphs : item.bodyParagraphs;
+        const nextReadMinutes = Math.max(
+          1,
+          Math.min(10, Math.ceil(nextParagraphs.join(' ').split(/\s+/).length / 160) || item.readMinutes),
+        );
         return {
           ...item,
           summaryByStyle: {
@@ -384,7 +388,9 @@ export const useNewsStore = create<NewsState>((set, get) => ({
           rewrittenVoices: Array.from(new Set([...(item.rewrittenVoices || []), targetVoice])),
           bodyParagraphs: nextParagraphs,
           pullQuote: enriched.pullQuote || item.pullQuote,
-          aiGenerated: true,
+          readMinutes: nextReadMinutes,
+          aiGenerated: enriched.aiGenerated,
+          fullArticleLoaded: Boolean(enriched.fullArticleLoaded ?? true),
         };
       };
 

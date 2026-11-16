@@ -10,6 +10,8 @@
     "dev:notes": "node ./scripts/run-app.mjs notes dev",
     "dev:news": "node ./scripts/run-app.mjs news dev",
     "build": "node ./scripts/run-all.mjs build",
+    "build:server": "node ./node_modules/typescript/bin/tsc -p server/tsconfig.build.json",
+    "start": "node ./dist-server/index.js",
     "lint": "node ./scripts/run-all.mjs lint",
     "check:server": "node ./node_modules/typescript/bin/tsc -p server/tsconfig.json --noEmit"
   },

@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { freeDictionaryProvider, type DictionaryEntry } from '../lib/dictionary';
+import { isRtlText } from '../lib/bookImportUtils';
 import type {
   Book,
   Quote,
@@ -319,9 +320,12 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   };
 
   const bookmarked = chapter ? isBookmarked(chapter.id) : false;
+  const isRtlChapter = Boolean(
+    chapter && isRtlText(`${chapter.title} ${chapter.paragraphs.slice(0, 3).join(' ')}`),
+  );
 
   const alignmentClass: Record<ReaderAlignment, string> = {
-    left: 'text-left',
+    left: 'text-start',
     justify: settings.hyphenation ? 'text-justify hyphens-auto' : 'text-justify',
   };
 
@@ -377,7 +381,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         {chapter && chapter.paragraphs.length > 0 ? (
           <article aria-labelledby="chapter-title">
             {/* Centered Chapter Label + Bold Chapter Title */}
-            <div className="mb-10 text-center sm:mb-12">
+            <div dir={isRtlChapter ? 'rtl' : 'ltr'} className="mb-10 text-center sm:mb-12">
               <p className={`pi-label ${theme.muted}`}>{chapter.label}</p>
               <h1
                 id="chapter-title"
@@ -385,15 +389,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               >
                 {chapter.title}
               </h1>
-              {!book.isFullSample && (
-                <p className={`mt-3 text-xs ${theme.muted}`}>
-                  Opening excerpt · Add Books supports full PDF import
-                </p>
-              )}
             </div>
 
             {/* Reflowable Serif Paragraphs with Drop Cap on First Paragraph */}
             <div
+              dir={isRtlChapter ? 'rtl' : 'ltr'}
               onMouseUp={() => {
                 const text = window.getSelection()?.toString().replace(/\s+/g, ' ').trim() || '';
                 setSelectedSnippet(text.slice(0, 480));
@@ -409,7 +409,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               className={`space-y-6 ${FONT_FAMILY_CLASS[settings.fontFamily]} ${FONT_SIZE_CLASS[settings.fontSize]} ${LINE_HEIGHT_CLASS[settings.lineHeight]} ${alignmentClass[settings.alignment]}`}
             >
               {chapter.paragraphs.map((paragraph, index) => (
-                <p key={`${chapter.id}-p-${index}`} className={index === 0 ? 'pi-dropcap' : ''}>
+                <p key={`${chapter.id}-p-${index}`} className={index === 0 && !isRtlChapter ? 'pi-dropcap' : ''}>
                   {paragraph}
                 </p>
               ))}

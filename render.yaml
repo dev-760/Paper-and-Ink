@@ -1,0 +1,86 @@
+services:
+  - type: web
+    name: paper-and-ink-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build:server
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_MODEL
+        value: gemini-4-hydrogen
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+      - key: NEWSDATA_API_KEY
+        sync: false
+      - key: MEDIASTACK_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
+    name: paper-and-ink-reader
+    runtime: static
+    buildCommand: npm ci && cd reader-web && npm ci && npm run build
+    staticPublishPath: reader-web/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_READER_URL
+        sync: false
+      - key: VITE_NOTES_URL
+        sync: false
+      - key: VITE_NEWS_URL
+        sync: false
+
+  - type: web
+    name: paper-and-ink-notes
+    runtime: static
+    buildCommand: npm ci && cd notes-web && npm ci && npm run build
+    staticPublishPath: notes-web/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_READER_URL
+        sync: false
+      - key: VITE_NOTES_URL
+        sync: false
+      - key: VITE_NEWS_URL
+        sync: false
+
+  - type: web
+    name: paper-and-ink-news
+    runtime: static
+    buildCommand: npm ci && cd news-web && npm ci && npm run build
+    staticPublishPath: news-web/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_READER_URL
+        sync: false
+      - key: VITE_NOTES_URL
+        sync: false
+      - key: VITE_NEWS_URL
+        sync: false

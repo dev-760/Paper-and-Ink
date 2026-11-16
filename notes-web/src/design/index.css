@@ -33,6 +33,42 @@ body {
   background-position: 0 12px;
 }
 
+/* Real bound notebook leaf: subtle spine gutter fold + stacked sheet edges */
+.pi-notebook-leaf {
+  box-shadow:
+    inset 18px 0 24px -16px rgba(31, 42, 58, 0.2),
+    4px 4px 0 -1px var(--bg-paper-subtle),
+    5px 5px 0 0 var(--border-hairline),
+    8px 8px 0 -1px var(--bg-paper-subtle),
+    9px 9px 0 0 var(--border-hairline),
+    0 18px 36px rgba(31, 42, 58, 0.14);
+}
+
+.dark .pi-notebook-leaf {
+  box-shadow:
+    inset 18px 0 24px -16px rgba(0, 0, 0, 0.45),
+    4px 4px 0 -1px #171c19,
+    5px 5px 0 0 rgba(242, 233, 219, 0.12),
+    8px 8px 0 -1px #131815,
+    9px 9px 0 0 rgba(242, 233, 219, 0.08),
+    0 20px 42px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes piPageTurn {
+  0% {
+    opacity: 0.86;
+    transform: perspective(1200px) rotateY(-1.6deg) translateX(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1200px) rotateY(0deg) translateX(0);
+  }
+}
+
+.pi-page-turn {
+  animation: piPageTurn 200ms var(--pi-ease-settle) forwards;
+}
+
 /* Accessible focus ring */
 .pi-focusable:focus-visible {
   outline: 2px solid var(--focus-ring);

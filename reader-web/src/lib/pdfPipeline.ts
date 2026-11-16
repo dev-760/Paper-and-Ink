@@ -1,7 +1,14 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { ShelfTone } from '../design-system/tokens';
-import type { Book, Chapter, CoverPalette, CoverPattern, Shelf } from '../types/reader';
+import type { Book, Chapter, Shelf } from '../types/reader';
+import { requestBookBrief } from './bookBrief';
+import {
+  estimateReadingMinutes,
+  parseFilenameTitleAuthor,
+  pickDeterministicCover,
+  suggestShelf,
+} from './bookImportUtils';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -43,62 +50,83 @@ export interface PdfImportPipeline {
   ): Promise<PdfImportResult>;
 }
 
-const COVER_PALETTES: CoverPalette[] = [
-  'terracotta-cream',
-  'navy-gold',
-  'sage-linen',
-  'ochre-espresso',
-  'slate-ivory',
-  'plum-parchment',
-  'forest-sand',
-  'rust-charcoal',
-];
-
-const COVER_PATTERNS: CoverPattern[] = ['arch', 'grid', 'waves', 'horizon', 'botanical', 'folio'];
-
-function pickDeterministicCover(seed: string): { palette: CoverPalette; pattern: CoverPattern } {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return {
-    palette: COVER_PALETTES[hash % COVER_PALETTES.length],
-    pattern: COVER_PATTERNS[(hash >> 3) % COVER_PATTERNS.length],
-  };
-}
-
-function cleanFilenameToTitle(filename: string): string {
-  return filename
-    .replace(/\.pdf$/i, '')
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function estimateReadingMinutes(paragraphs: string[]): number {
-  const words = paragraphs.join(' ').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 220));
-}
-
 function isChapterHeadingLine(line: string): boolean {
   const trimmed = line.trim();
   if (trimmed.length < 3 || trimmed.length > 90) return false;
-  return /^(?:chapter|part|section|book|letter|epilogue|prologue)\s+(?:[ivxlcdm]+|\d+|[a-z]+)(?:[:.\s-].*)?$/i.test(
-    trimmed,
+  return (
+    /^(?:prologue|epilogue|introduction|preface|foreword|afterword|مقدمة|تمهيد|خاتمة)$/i.test(trimmed) ||
+    /^(?:the\s+)?(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\s+(?:notebook|chapter|part|book|section|letter|act)(?:[:.\s-].*)?$/i.test(
+      trimmed,
+    ) ||
+    /^(?:chapter|part|section|book|letter|epilogue|prologue|notebook|act)\s+(?:[ivxlcdm]+|\d+|[a-z]+)(?:[:.\s-].*)?$/i.test(
+      trimmed,
+    ) ||
+    /^(?:الفصل|الجزء|الباب|القسم|الكتاب)\s+.{1,45}$/.test(trimmed)
   );
 }
 
 function splitTextIntoParagraphs(pageText: string): string[] {
   const normalized = pageText.replace(/\r\n/g, '\n').replace(/-\n([a-z])/g, '$1');
-  const blocks = normalized
-    .split(/\n{2,}/)
-    .map((block) => block.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim())
-    .filter((block) => block.length > 0);
-  if (blocks.length > 0) return blocks;
-  return normalized
+
+  // If the text already uses double-newline paragraph breaks (e.g. from AI OCR), preserve them while separating headings.
+  const rawBlocks = normalized.split(/\n{2,}/);
+  if (rawBlocks.length > 1) {
+    const out: string[] = [];
+    for (const block of rawBlocks) {
+      const lines = block
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+      let acc: string[] = [];
+      for (const line of lines) {
+        if (isChapterHeadingLine(line)) {
+          if (acc.length > 0) {
+            out.push(acc.join(' ').replace(/\s+/g, ' ').trim());
+            acc = [];
+          }
+          out.push(line);
+        } else {
+          acc.push(line);
+        }
+      }
+      if (acc.length > 0) {
+        out.push(acc.join(' ').replace(/\s+/g, ' ').trim());
+      }
+    }
+    return out.filter(Boolean);
+  }
+
+  // Single-newline embedded PDF text: detect heading lines and paragraph breaks at sentence boundaries.
+  const lines = normalized
     .split('\n')
-    .map((line) => line.trim())
+    .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter(Boolean);
+  const paragraphs: string[] = [];
+  let buffer: string[] = [];
+
+  for (const line of lines) {
+    if (isChapterHeadingLine(line)) {
+      if (buffer.length > 0) {
+        paragraphs.push(buffer.join(' ').trim());
+        buffer = [];
+      }
+      paragraphs.push(line);
+      continue;
+    }
+
+    buffer.push(line);
+    const endsParagraph = /[.!?"'”’»\])؟]$/.test(line) && buffer.join(' ').length >= 160 && line.length < 56;
+    if (endsParagraph) {
+      paragraphs.push(buffer.join(' ').trim());
+      buffer = [];
+    }
+  }
+
+  if (buffer.length > 0) {
+    paragraphs.push(buffer.join(' ').trim());
+  }
+
+  return paragraphs.filter(Boolean);
 }
 
 interface RawExtractedPage {
@@ -175,25 +203,8 @@ function assembleChapters(pages: RawExtractedPage[], bookId: string): Chapter[] 
   return chapters;
 }
 
-function suggestShelf(title: string, textSample: string, shelves: Shelf[]): Shelf | undefined {
-  const combined = `${title} ${textSample}`.toLowerCase();
-  const findByIdOrKeyword = (keywords: string[]) =>
-    shelves.find((s) => keywords.some((kw) => s.title.toLowerCase().includes(kw) || s.id.toLowerCase().includes(kw)));
-
-  if (/chapter|novel|poem|story|fiction|tale|sonnet/.test(combined)) {
-    return findByIdOrKeyword(['literature', 'classic', 'fiction']) || shelves[0];
-  }
-  if (/essay|philosophy|letter|journal|memoir|ethics|art|history/.test(combined)) {
-    return findByIdOrKeyword(['essay', 'philosophy', 'history', 'nonfiction']) || shelves[1] || shelves[0];
-  }
-  if (/theorem|algorithm|design|system|architecture|physics|research|study/.test(combined)) {
-    return findByIdOrKeyword(['craft', 'design', 'science', 'reference']) || shelves[2] || shelves[0];
-  }
-  return shelves[0];
-}
-
-async function renderPdfPageToPngDataUrl(page: pdfjsLib.PDFPageProxy): Promise<string> {
-  const viewport = page.getViewport({ scale: 1.5 });
+async function renderPdfPageToJpegDataUrl(page: pdfjsLib.PDFPageProxy): Promise<string> {
+  const viewport = page.getViewport({ scale: 1.35 });
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.floor(viewport.width));
   canvas.height = Math.max(1, Math.floor(viewport.height));
@@ -201,8 +212,10 @@ async function renderPdfPageToPngDataUrl(page: pdfjsLib.PDFPageProxy): Promise<s
   if (!context) {
     throw new Error('Canvas rendering context is unavailable.');
   }
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvas, canvasContext: context, viewport }).promise;
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL('image/jpeg', 0.85);
 }
 
 export const localAndAiPdfPipeline: PdfImportPipeline = {
@@ -295,7 +308,7 @@ export const localAndAiPdfPipeline: PdfImportPipeline = {
         const batchInputs: Array<{ pageNumber: number; imageDataUrl: string; rawText?: string }> = [];
         for (let p = start; p <= end; p++) {
           const page = await pdfDoc.getPage(p);
-          const imageDataUrl = await renderPdfPageToPngDataUrl(page);
+          const imageDataUrl = await renderPdfPageToJpegDataUrl(page);
           batchInputs.push({
             pageNumber: p,
             imageDataUrl,
@@ -309,11 +322,12 @@ export const localAndAiPdfPipeline: PdfImportPipeline = {
           .trim()
           .replace(/\/$/, '');
 
+        const parsedHint = parseFilenameTitleAuthor(file.name);
         const res = await fetch(`${apiBase}/api/ai/pdf-extract`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            titleHint: metaTitle || cleanFilenameToTitle(file.name),
+            titleHint: metaTitle || parsedHint.title,
             pages: batchInputs,
           }),
         });
@@ -348,8 +362,9 @@ export const localAndAiPdfPipeline: PdfImportPipeline = {
     onProgress?.({ stage: 'building_cover', detail: 'Structuring chapters and designing cover…' });
     const bookId = `pdf-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const chapters = assembleChapters(extractedPages, bookId);
-    const title = aiTitle || metaTitle || cleanFilenameToTitle(file.name) || 'Imported Book';
-    const author = aiAuthor || metaAuthor || 'Imported PDF';
+    const parsedFilename = parseFilenameTitleAuthor(file.name);
+    const title = aiTitle || metaTitle || parsedFilename.title || 'Imported Book';
+    const author = aiAuthor || metaAuthor || parsedFilename.author || 'Imported PDF';
 
     onProgress?.({ stage: 'categorizing', detail: 'Matching shelf and formatting typography…' });
     const sampleText = chapters[0]?.paragraphs.slice(0, 3).join(' ') || '';
@@ -361,13 +376,33 @@ export const localAndAiPdfPipeline: PdfImportPipeline = {
       0,
     );
 
+    const fallbackDescription = `${usedAiOcr ? 'OCR-digitized from PDF' : 'Imported from PDF'} · ${totalPages} PDF pages · ~${wordCount.toLocaleString()} words stored locally.`;
+    let aiBrief: string | undefined;
+    let aiThemes: string[] | undefined;
+
+    onProgress?.({ stage: 'categorizing', detail: 'Drafting AI brief about your book…' });
+    try {
+      const briefResult = await requestBookBrief({
+        title,
+        author,
+        totalPages,
+        chapters,
+      });
+      aiBrief = briefResult.brief;
+      aiThemes = briefResult.themes;
+    } catch {
+      // Keep graceful local summary when AI is offline or unavailable.
+    }
+
     const book: Book = {
       id: bookId,
       shelfId: shelf?.id || shelves[0]?.id || 'literature',
       title,
       author,
       year: String(new Date().getFullYear()),
-      description: `${usedAiOcr ? 'OCR-digitized from PDF' : 'Imported from PDF'} · ${totalPages} PDF pages · ~${wordCount.toLocaleString()} words stored locally.`,
+      description: aiBrief || fallbackDescription,
+      ...(aiBrief ? { aiBrief } : {}),
+      ...(aiThemes && aiThemes.length > 0 ? { aiThemes } : {}),
       totalPages,
       isFullSample: true,
       progressPercent: 0,

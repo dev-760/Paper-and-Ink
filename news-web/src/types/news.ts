@@ -77,6 +77,7 @@ export interface Story {
   id: string;
   provider?: 'newsdata' | 'mediastack';
   aiGenerated?: boolean;
+  fullArticleLoaded?: boolean;
   topic: Topic;
   source: string;
   originalUrl: string;
