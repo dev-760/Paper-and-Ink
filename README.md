@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/banner.svg" alt="Paper &amp; Ink: notes, books, and news, picked up from a shelf" width="100%">
+  <img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/banner.svg" alt="Paper & Ink: notes, books, and news, picked up from a shelf" width="100%">
 </p>
 
 ---
@@ -7,7 +7,7 @@
 <h2 align="center">About</h2>
 
 <p align="center">
-  <b>Paper &amp; Ink</b> is the set of apps I use every day:<br>
+  <b>Paper & Ink</b> is the set of apps I use every day:<br>
   one for notes, one for books, and one for news.
 </p>
 
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-notes.svg" alt="Open Notes" height="52"></a>
+  <a href="https://notes.hasankarasu.me/"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-notes.svg" alt="Open Notes" height="52"></a>
 </p>
 
 ---
@@ -41,7 +41,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-reader.svg" alt="Open Reader" height="52"></a>
+  <a href="https://reader.hasankarasu.me/"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-reader.svg" alt="Open Reader" height="52"></a>
 </p>
 
 ---
@@ -55,7 +55,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-news.svg" alt="Open News" height="52"></a>
+  <a href="https://news.hasankarasu.me/"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-news.svg" alt="Open News" height="52"></a>
 </p>
 
 ---
@@ -67,12 +67,12 @@
 
 Paper & Ink is a local-first productivity and reading suite built with React 19, Vite 8, TypeScript, and Tailwind CSS v4. A lightweight Express server handles **Supabase username authentication** and **server-side Gemini OCR and scanned-PDF extraction**.
 
-| Application | Purpose | Default local URL | Icon source |
-| :--- | :--- | :--- | :--- |
-| **Reader** | Personal library, EPUB/TXT/PDF reading, dictionary lookup, quote saving | `http://localhost:5173` | `reader-web/icon.png` |
-| **Notes** | Tactile notebooks, `perfect-freehand` ink canvas, handwriting OCR, action capture | `http://localhost:5174` | `notes-web/icon.png` |
-| **News** | Calm editorial daily briefing, reading-style AI voice selector, saved stories | `http://localhost:5175` | `news-web/icon.png` |
-| **Backend API (`server/`)** | Username auth proxy (Supabase), Gemini OCR/PDF/news summarization, NewsData/Mediastack proxy | `http://localhost:3001` | none |
+| Application | Purpose | Live URL | Default local URL | Icon source |
+| :--- | :--- | :--- | :--- | :--- |
+| **Reader** | Personal library, EPUB/TXT/PDF reading, dictionary lookup, quote saving | [reader.hasankarasu.me](https://reader.hasankarasu.me/) | `http://localhost:5173` | `reader-web/icon.png` |
+| **Notes** | Tactile notebooks, `perfect-freehand` ink canvas, handwriting OCR, action capture | [notes.hasankarasu.me](https://notes.hasankarasu.me/) | `http://localhost:5174` | `notes-web/icon.png` |
+| **News** | Calm editorial daily briefing, reading-style AI voice selector, saved stories | [news.hasankarasu.me](https://news.hasankarasu.me/) | `http://localhost:5175` | `news-web/icon.png` |
+| **Backend API (`server/`)** | Username auth proxy (Supabase), Gemini OCR/PDF/news summarization, NewsData/Mediastack proxy | — | `http://localhost:3001` | none |
 
 ### Architecture and privacy boundaries
 
@@ -126,59 +126,3 @@ Paper & Ink/
 ├── reader-web/                      # Library and reading app (:5173)
 ├── notes-web/                       # Notebook and handwriting studio (:5174)
 └── news-web/                        # Editorial news app (:5175)
-```
-
-### Setup and running locally
-
-**1. Environment variables.** Copy `.env.example` to `.env` at the repository root and fill in your credentials:
-
-```env
-GEMINI_API_KEY=
-GEMINI_MODEL=
-MEDIASTACK_API_KEY=
-NEWSDATA_API_KEY=
-SUPABASE_URL=
-SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SECRET_KEY=
-SUPABASE_JWKS_URL=
-ALLOWED_ORIGINS=
-```
-
-In local dev, `VITE_READER_URL`, `VITE_NOTES_URL`, and `VITE_NEWS_URL` default to ports `5173`, `5174`, and `5175`, and `/api` proxies to `http://127.0.0.1:3001`. In production builds the sibling URLs stay unset unless you provide them.
-
-**2. Database migrations.** Apply both [`20261116000000_auth_profiles.sql`](supabase/migrations/20261116000000_auth_profiles.sql) and [`20261116010000_notes_cloud_sync.sql`](supabase/migrations/20261116010000_notes_cloud_sync.sql) to your Supabase project. They create `app_private.username_identities`, `public.profiles`, the private `avatars` bucket, the username RPCs, and the owner-scoped `public.notebooks` and `public.note_pages` tables.
-
-**3. Install dependencies.**
-
-```bash
-npm install
-npm --prefix reader-web install
-npm --prefix notes-web install
-npm --prefix news-web install
-```
-
-**4. Run and verify** from the repository root:
-
-```bash
-npm run dev     # backend (:3001) + Reader (:5173) + Notes (:5174) + News (:5175)
-npm run lint    # typecheck the server and all three apps
-npm run build   # typecheck and build dist/ for all three apps
-```
-
-**5. Hosting each app separately.** Each frontend builds its own static `dist/` bundle and keeps user content under its own origin.
-
-- Set `VITE_API_BASE_URL` on each frontend to your deployed `server/` URL, plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
-- Set `ALLOWED_ORIGINS` on `server/` to a comma-separated list of the deployed app origins.
-- Leave `VITE_READER_URL`, `VITE_NOTES_URL`, and `VITE_NEWS_URL` unset on standalone deployments, or set them to the deployed URLs so the header `AppSwitcher` links between the sites.
-
-</details>
-
----
-
-<p align="center">
-  <img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/Paper%20%26%20Ink.png" alt="Paper &amp; Ink logo" height="100">
-  <br><br>
-  <sub>Designed and built by <b>Hassan Karasu</b></sub>
-  <br>
-  <sub>Made with the <a href="DESIGN.md">Paper &amp; Ink design system</a> · © 2026</sub>
-</p>
