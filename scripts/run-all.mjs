@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 const mode = process.argv[2] || 'build';
 const rootDir = path.resolve(import.meta.dirname, '..');
@@ -21,7 +20,7 @@ function runNode(args, label) {
 
 if (mode === 'dev') {
   const children = [
-    spawn(process.execPath, ['--import', pathToFileURL(path.join(rootDir, 'node_modules', 'tsx', 'dist', 'loader.mjs')).href, 'server/index.ts'], {
+    spawn(process.execPath, [path.join(rootDir, 'scripts', 'run-server.mjs'), 'dev'], {
       cwd: rootDir,
       stdio: ['ignore', 'inherit', 'inherit'],
     }),
@@ -48,12 +47,12 @@ if (mode === 'dev') {
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 } else if (mode === 'build') {
-  await runNode([path.join(rootDir, 'node_modules', 'typescript', 'bin', 'tsc'), '-p', 'server/tsconfig.build.json'], 'server build');
+  await runNode([path.join(rootDir, 'scripts', 'run-server.mjs'), 'check'], 'server syntax check');
   for (const app of ['reader', 'notes', 'news']) {
     await runNode([path.join(rootDir, 'scripts', 'run-app.mjs'), app, 'build'], `${app} build`);
   }
 } else if (mode === 'lint') {
-  await runNode([path.join(rootDir, 'node_modules', 'typescript', 'bin', 'tsc'), '-p', 'server/tsconfig.json', '--noEmit'], 'server typecheck');
+  await runNode([path.join(rootDir, 'scripts', 'run-server.mjs'), 'check'], 'server syntax check');
   for (const app of ['reader', 'notes', 'news']) {
     await runNode([path.join(rootDir, 'scripts', 'run-app.mjs'), app, 'lint'], `${app} typecheck`);
   }

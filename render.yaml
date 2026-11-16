@@ -1,14 +1,12 @@
 services:
   - type: web
     name: paper-and-ink-api
-    runtime: node
+    runtime: python
     plan: free
-    buildCommand: npm ci && npm run build:server
-    startCommand: npm start
+    buildCommand: pip install -r server/requirements.txt
+    startCommand: uvicorn server.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: GEMINI_MODEL
         value: gemini-4-hydrogen
       - key: GEMINI_API_KEY

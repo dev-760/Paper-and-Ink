@@ -65,7 +65,7 @@
 
 <br>
 
-Paper & Ink is a local-first productivity and reading suite built with React 19, Vite 8, TypeScript, and Tailwind CSS v4. A lightweight Express server handles **Supabase username authentication** and **server-side Gemini OCR and scanned-PDF extraction**.
+Paper & Ink is a local-first productivity and reading suite built with React 19, Vite 8, TypeScript, and Tailwind CSS v4. A FastAPI backend (`server/`) handles **Supabase username authentication** and **server-side Gemini OCR, scanned-PDF extraction, and news summarization**.
 
 | Application | Purpose | Default local URL | Icon source |
 | :--- | :--- | :--- | :--- |
@@ -93,7 +93,7 @@ Every local store is account-scoped (`guest` or `user_<uuid>`). Logging out clea
 
 **Server-side AI and live news (Gemini, NewsData.io, Mediastack)**
 
-All AI and news-provider requests run inside [`server/`](server/index.ts), using the Gemini API with the server-side `GEMINI_API_KEY`:
+All AI and news-provider requests run inside [`server/`](server/main.py), using the Gemini API with the server-side `GEMINI_API_KEY`:
 
 - `POST /api/ai/ocr`: transcribes handwritten canvases or note photos into a title, summary, key points, and tasks. The original ink and photo are preserved.
 - `POST /api/ai/pdf-extract`: cleans extracted text, or OCRs rasterized scanned pages, into readable chapters.
@@ -118,7 +118,8 @@ Paper & Ink/
 │   ├── viteShared.ts                # Client env injection and workspace aliases
 │   ├── auth/                        # Shared auth hook, guest onboarding, account scoping
 │   └── design-system/               # Shared CSS tokens, TS tokens, UI, auth views
-├── server/                          # Express backend (:3001)
+├── server/                          # FastAPI backend (:3001)
+│   ├── main.py                      # FastAPI app, CORS, security headers, size guard
 │   ├── routes/                      # /api/auth/*, /api/ai/*, /api/news/*
 │   └── services/                    # Supabase admin, Gemini OCR/PDF, news ingestion
 ├── supabase/
@@ -155,6 +156,8 @@ npm install
 npm --prefix reader-web install
 npm --prefix notes-web install
 npm --prefix news-web install
+python -m venv server/.venv
+server/.venv/Scripts/python -m pip install -r server/requirements.txt   # macOS/Linux: server/.venv/bin/python
 ```
 
 **4. Run and verify** from the repository root:

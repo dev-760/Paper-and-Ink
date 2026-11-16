@@ -3,6 +3,11 @@ node_modules
 dist
 */dist
 dist-server
+.venv
+server/.venv
+__pycache__
+*.pyc
+.pytest_cache
 .env
 .env.*
 !.env.example
