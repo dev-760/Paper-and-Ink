@@ -1,0 +1,16 @@
+{
+  "name": "Paper & Ink Notes",
+  "short_name": "Notes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6EFE4",
+  "theme_color": "#F6EFE4",
+  "description": "A calm, tactile writing and handwriting notebook experience from Paper & Ink.",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

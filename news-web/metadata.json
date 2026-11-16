@@ -1,0 +1,8 @@
+{
+  "name": "Paper & Ink News",
+  "description": "A personalized editorial news-reading experience from the Paper & Ink publishing family.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Paper & Ink News",
+  "short_name": "News",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6EFE4",
+  "theme_color": "#F6EFE4",
+  "description": "Calm, curated editorial daily news briefing from Paper & Ink.",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

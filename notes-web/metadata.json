@@ -1,0 +1,6 @@
+{
+  "name": "Paper & Ink Notes",
+  "description": "A tactile digital notebook shelf and stylus handwriting studio designed to preserve the quiet craft of physical paper, notebooks, and thoughtful organization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

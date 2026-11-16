@@ -1,0 +1,122 @@
+/* ==========================================================================
+   Paper & Ink Design System — Semantic Theme Tokens
+   Light Paper Mode (default) and Dark Desk Mode.
+   ========================================================================== */
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg-canvas: var(--pi-paper-cream);
+  --bg-paper: var(--pi-card-paper);
+  --bg-paper-subtle: #F2EAE0;
+  --bg-paper-elevated: #FFFDF8;
+  --bg-shelf-bar: var(--pi-shelf-tan);
+  --bg-shelf-bar-edge: var(--pi-shelf-tan-edge);
+  --shelf-rail-gradient: linear-gradient(
+    90deg,
+    rgba(139, 152, 134, 0.72) 0%,
+    rgba(104, 121, 102, 0.78) 45%,
+    rgba(66, 86, 70, 0.82) 100%
+  );
+  --shelf-rail-border: rgba(255, 255, 255, 0.36);
+  --shelf-rail-shadow: 0 10px 22px rgba(31, 42, 58, 0.16), 0 2px 4px rgba(31, 42, 58, 0.10);
+  --bg-toolbar: #1F2A3A;
+  --bg-toolbar-active: #FBF7EF;
+  --bg-pill: #FBF7EF;
+  --bg-pill-hover: #F0E7D9;
+  --bg-pill-active: var(--pi-ink-navy);
+  --bg-scrim: rgba(20, 26, 22, 0.42);
+
+  /* Text */
+  --text-primary: var(--pi-ink-navy);
+  --text-secondary: #434E5E;
+  --text-muted: #5C6673;
+  --text-on-pill-active: #FBF7EF;
+  --text-on-toolbar: #F6EFE4;
+  --text-on-toolbar-active: #1F2A3A;
+  --text-on-accent: #FBF7EF;
+
+  /* Accent */
+  --accent-primary: var(--pi-terracotta-deep);
+  --accent-surface: var(--pi-terracotta);
+  --accent-hover: #7B2E12;
+  --accent-subtle: rgba(176, 74, 37, 0.10);
+
+  /* Borders & Dividers */
+  --border-hairline: rgba(31, 42, 58, 0.11);
+  --border-strong: rgba(31, 42, 58, 0.22);
+  --focus-ring: var(--pi-terracotta-deep);
+
+  /* Paper Ruling & Grain */
+  --paper-rule-line: rgba(31, 42, 58, 0.085);
+  --paper-margin-line: rgba(176, 74, 37, 0.18);
+  --paper-shadow: 0 2px 10px rgba(31, 42, 58, 0.05), 0 1px 2px rgba(31, 42, 58, 0.06);
+  --cover-shadow: 0 6px 16px rgba(31, 42, 58, 0.14), 0 2px 4px rgba(31, 42, 58, 0.08);
+  --toolbar-shadow: 0 10px 28px rgba(20, 26, 22, 0.24), 0 2px 6px rgba(20, 26, 22, 0.14);
+
+  /* Accessible Ink Colors on Light Paper */
+  --ink-navy: #1F2A3A;
+  --ink-terracotta: #9A3B19;
+  --ink-forest: #2A4730;
+}
+
+.dark,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg-canvas: var(--pi-desk-background);
+  --bg-paper: var(--pi-desk-paper);
+  --bg-paper-subtle: #181E1A;
+  --bg-paper-elevated: var(--pi-desk-paper-elevated);
+  --bg-shelf-bar: var(--pi-shelf-dark-wood);
+  --bg-shelf-bar-edge: var(--pi-shelf-dark-edge);
+  --shelf-rail-gradient: linear-gradient(
+    90deg,
+    rgba(64, 77, 66, 0.78) 0%,
+    rgba(47, 59, 49, 0.82) 50%,
+    rgba(35, 45, 37, 0.88) 100%
+  );
+  --shelf-rail-border: rgba(242, 233, 219, 0.14);
+  --shelf-rail-shadow: 0 12px 26px rgba(0, 0, 0, 0.45), 0 2px 5px rgba(0, 0, 0, 0.30);
+  --bg-toolbar: #0D110E;
+  --bg-toolbar-active: #F2E8D8;
+  --bg-pill: rgba(246, 239, 228, 0.08);
+  --bg-pill-hover: rgba(246, 239, 228, 0.14);
+  --bg-pill-active: #F2E8D8;
+  --bg-scrim: rgba(7, 10, 8, 0.72);
+
+  /* Text */
+  --text-primary: #F2E9DB;
+  --text-secondary: #C8C0B2;
+  --text-muted: #9E978B;
+  --text-on-pill-active: #141A16;
+  --text-on-toolbar: #F2E9DB;
+  --text-on-toolbar-active: #141A16;
+  --text-on-accent: #141A16;
+
+  /* Accent */
+  --accent-primary: #E07D58;
+  --accent-surface: #C9603B;
+  --accent-hover: #EB9372;
+  --accent-subtle: rgba(224, 125, 88, 0.15);
+
+  /* Borders & Dividers */
+  --border-hairline: rgba(242, 233, 219, 0.12);
+  --border-strong: rgba(242, 233, 219, 0.24);
+  --focus-ring: #E07D58;
+
+  /* Paper Ruling & Grain */
+  --paper-rule-line: rgba(242, 233, 219, 0.075);
+  --paper-margin-line: rgba(224, 125, 88, 0.20);
+  --paper-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --cover-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --toolbar-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  /* Accessible Ink Colors on Dark Paper */
+  --ink-navy: #EDE4D3;
+  --ink-terracotta: #E88964;
+  --ink-forest: #9BBF9E;
+}

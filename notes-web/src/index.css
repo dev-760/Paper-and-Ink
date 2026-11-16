@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@source "../../packages/design-system";
+@import "@paper-and-ink/design-system/tokens/tokens.css";
+@import "./design/index.css";

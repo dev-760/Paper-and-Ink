@@ -1,0 +1,33 @@
+{
+  "name": "paper-and-ink-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ./scripts/run-all.mjs dev",
+    "dev:server": "node ./node_modules/tsx/dist/cli.mjs watch server/index.ts",
+    "dev:reader": "node ./scripts/run-app.mjs reader dev",
+    "dev:notes": "node ./scripts/run-app.mjs notes dev",
+    "dev:news": "node ./scripts/run-app.mjs news dev",
+    "build": "node ./scripts/run-all.mjs build",
+    "lint": "node ./scripts/run-all.mjs lint",
+    "check:server": "node ./node_modules/typescript/bin/tsc -p server/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@openrouter/sdk": "^1.5.104",
+    "@supabase/supabase-js": "^2.119.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "jose": "^6.2.17"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.3.0",
+    "lucide-react": "^0.577.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}

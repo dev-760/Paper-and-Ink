@@ -1,0 +1,74 @@
+/* ==========================================================================
+   Paper & Ink Design System — Primitive Tokens
+   Canonical foundation for Paper & Ink Notes, Reader, and News.
+   ========================================================================== */
+
+:root {
+  /* Core Palette */
+  --pi-paper-cream: #F6EFE4;
+  --pi-card-paper: #FBF7EF;
+  --pi-paper-warm-tint: #EFE6D8;
+  --pi-ink-navy: #1F2A3A;
+  --pi-ink-slate: #4B5563;
+  --pi-terracotta: #B04A25;
+  --pi-terracotta-deep: #8F3818;
+  --pi-terracotta-soft: #EEDAD1;
+  --pi-shelf-tan: #D3BF9C;
+  --pi-shelf-tan-edge: #BBA47D;
+  --pi-shelf-dark-wood: #2A251F;
+  --pi-shelf-dark-edge: #1D1A15;
+  --pi-desk-background: #141A16;
+  --pi-desk-paper: #1C221E;
+  --pi-desk-paper-elevated: #232A25;
+
+  /* Notebook Cover Palette + WCAG AA/AAA Verified Text Pairings */
+  --pi-cover-navy: #1F2A3A;
+  --pi-cover-navy-ink: #F6EFE4;
+  --pi-cover-navy-muted: #CBD3DF;
+  --pi-cover-navy-spine: #161E2B;
+
+  --pi-cover-terracotta: #B04A25;
+  --pi-cover-terracotta-ink: #FBF7EF;
+  --pi-cover-terracotta-muted: #F5DFD6;
+  --pi-cover-terracotta-spine: #8E391A;
+
+  --pi-cover-sage: #CBD4C2;
+  --pi-cover-sage-ink: #1F2A3A;
+  --pi-cover-sage-muted: #3A463B;
+  --pi-cover-sage-spine: #B4BFA9;
+
+  --pi-cover-tan: #D9C7A8;
+  --pi-cover-tan-ink: #1F2A3A;
+  --pi-cover-tan-muted: #3D4652;
+  --pi-cover-tan-spine: #C2AD89;
+
+  --pi-cover-plum: #5B4A6E;
+  --pi-cover-plum-ink: #FBF7EF;
+  --pi-cover-plum-muted: #E0D7EC;
+  --pi-cover-plum-spine: #473957;
+
+  --pi-cover-forest: #2D3D2F;
+  --pi-cover-forest-ink: #F6EFE4;
+  --pi-cover-forest-muted: #CBD6CC;
+  --pi-cover-forest-spine: #212E23;
+
+  /* Typography Families */
+  --pi-font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --pi-font-sans: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Radii */
+  --pi-radius-card: 24px;
+  --pi-radius-cover: 14px;
+  --pi-radius-pill: 9999px;
+  --pi-radius-sm: 10px;
+  --pi-radius-md: 16px;
+
+  /* Motion */
+  --pi-ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --pi-duration-fast: 160ms;
+  --pi-duration-pickup: 240ms;
+
+  /* Touch & Layout */
+  --pi-touch-min: 44px;
+  --pi-measure-reading: 68ch;
+}

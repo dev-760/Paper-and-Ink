@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@source "../../packages/design-system";
+@import "@paper-and-ink/design-system/tokens/tokens.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================================
+   Paper & Ink Design System — Extractable Tokens
+   Shared visual language across Notes, Reader, and News.
+   ============================================================================ */
+:root {
+  /* Core Surfaces & Ink */
+  --pi-paper: #F6EFE4;
+  --pi-paper-elevated: #FBF7F0;
+  --pi-paper-muted: #ECE3D4;
+  --pi-sepia: #ECE0CB;
+  --pi-sepia-elevated: #F4EAD8;
+  --pi-desk-dark: #141A16;
+  --pi-desk-elevated: #1B231E;
+
+  --pi-ink: #1F2A3A;
+  --pi-ink-muted: #525E6E;
+  --pi-ink-subtle: #6E7887;
+  --pi-ink-on-dark: #ECE7DC;
+  --pi-ink-on-dark-muted: #A9B1A8;
+
+  /* Brand & Semantic Accents */
+  --pi-terracotta: #C4572F;
+  --pi-terracotta-hover: #AD4A25;
+  --pi-sage: #526B59;
+  --pi-navy: #1F2A3A;
+  --pi-tan: #9D7B52;
+
+  /* Hairlines & Radii */
+  --pi-hairline: rgba(31, 42, 58, 0.12);
+  --pi-hairline-strong: rgba(31, 42, 58, 0.2);
+  --pi-hairline-dark: rgba(236, 231, 220, 0.14);
+  --pi-radius-card: 24px;
+  --pi-radius-cover: 12px;
+  --pi-radius-pill: 9999px;
+
+  /* Acrylic Shelf Surfaces (~60% translucent muted pigments) */
+  --pi-acrylic-terracotta: rgba(196, 87, 47, 0.56);
+  --pi-acrylic-sage: rgba(88, 118, 96, 0.56);
+  --pi-acrylic-navy: rgba(31, 42, 58, 0.62);
+  --pi-acrylic-tan: rgba(171, 136, 92, 0.56);
+
+  /* Typography Stacks */
+  --pi-font-headline: "Fraunces", Georgia, "Times New Roman", serif;
+  --pi-font-reading: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --pi-font-reading-lora: "Lora", Georgia, "Times New Roman", serif;
+  --pi-font-ui: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.dark {
+  --pi-hairline: rgba(236, 231, 220, 0.14);
+  --pi-hairline-strong: rgba(236, 231, 220, 0.24);
+  --pi-acrylic-terracotta: rgba(196, 87, 47, 0.48);
+  --pi-acrylic-sage: rgba(88, 118, 96, 0.48);
+  --pi-acrylic-navy: rgba(45, 62, 86, 0.6);
+  --pi-acrylic-tan: rgba(171, 136, 92, 0.48);
+}
+
+@layer base {
+  html {
+    font-family: var(--pi-font-ui);
+    background-color: var(--pi-paper);
+    color: var(--pi-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.dark {
+    background-color: var(--pi-desk-dark);
+    color: var(--pi-ink-on-dark);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--pi-terracotta);
+    outline-offset: 2px;
+  }
+}
+
+/* Typography Role Helpers */
+.font-headline {
+  font-family: var(--pi-font-headline);
+  text-wrap: balance;
+}
+
+.font-reading-serif {
+  font-family: var(--pi-font-reading);
+}
+
+.font-reading-lora {
+  font-family: var(--pi-font-reading-lora);
+}
+
+.font-ui {
+  font-family: var(--pi-font-ui);
+}
+
+/* Short tracked uppercase label (strictly for brief labels only) */
+.pi-label {
+  font-family: var(--pi-font-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Book Drop Cap (first paragraph of each chapter) */
+.pi-dropcap::first-letter {
+  font-family: var(--pi-font-headline);
+  float: left;
+  font-size: 3.65rem;
+  line-height: 0.84;
+  font-weight: 600;
+  padding-top: 0.25rem;
+  padding-right: 0.6rem;
+  color: var(--pi-terracotta);
+}
+
+/* Acrylic Shelf Bar */
+.pi-acrylic-shelf {
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  border-top: 1px solid rgba(255, 255, 255, 0.42);
+  border-bottom: 2px solid rgba(31, 42, 58, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 6px 14px -8px rgba(31, 42, 58, 0.22);
+}
+
+.dark .pi-acrylic-shelf {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 8px 18px -8px rgba(0, 0, 0, 0.55);
+}
+
+.pi-acrylic-terracotta {
+  background-color: var(--pi-acrylic-terracotta);
+}
+
+.pi-acrylic-sage {
+  background-color: var(--pi-acrylic-sage);
+}
+
+.pi-acrylic-navy {
+  background-color: var(--pi-acrylic-navy);
+}
+
+.pi-acrylic-tan {
+  background-color: var(--pi-acrylic-tan);
+}
+
+/* Tactile Screw Dots on Acrylic Shelf */
+.pi-screw-dot {
+  background: radial-gradient(circle at 35% 35%, #f5efe6 0%, #b7afa3 55%, #6f685f 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    0 1px 2px rgba(20, 26, 22, 0.35);
+}
+
+/* Subtle Paper Spine Crease on Book Covers */
+.pi-book-cover {
+  box-shadow:
+    inset 6px 0 10px -6px rgba(255, 255, 255, 0.32),
+    inset 2px 0 3px rgba(0, 0, 0, 0.18),
+    0 4px 10px -4px rgba(31, 42, 58, 0.18);
+}
+
+/* Horizontal Shelf Scroller (hide scrollbar cleanly while keeping keyboard & wheel scroll) */
+.pi-shelf-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.pi-shelf-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom Reading Blur Fade (active while scrolling) */
+.pi-scroll-blur-fade {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  mask-image: linear-gradient(to top, black 35%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 35%, transparent 100%);
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

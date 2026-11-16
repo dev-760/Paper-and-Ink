@@ -1,0 +1,6 @@
+{
+  "name": "Paper & Ink Reader",
+  "description": "A calm, typography-first PDF-to-book reader with acrylic library shelves, reflowable serif chapters, and ambient audio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
