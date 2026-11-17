@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/banner.svg" alt="Paper &amp; Ink: notes, books, and news, picked up from a shelf" width="100%">
+  <img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/banner.svg" alt="Paper & Ink: notes, books, and news, picked up from a shelf" width="100%">
 </p>
 
 ---
@@ -7,7 +7,7 @@
 <h2 align="center">About</h2>
 
 <p align="center">
-  <b>Paper &amp; Ink</b> is the set of apps I use every day:<br>
+  <b>Paper & Ink</b> is the set of apps I use every day:<br>
   one for notes, one for books, and one for news.
 </p>
 
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-notes.svg" alt="Open Notes" height="52"></a>
+  <a href="https://notes.hasankarasu.me/"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-notes.svg" alt="Open Notes" height="52"></a>
 </p>
 
 ---
@@ -41,7 +41,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-reader.svg" alt="Open Reader" height="52"></a>
+  <a href="https://reader.hasankarasu.me/"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-reader.svg" alt="Open Reader" height="52"></a>
 </p>
 
 ---
@@ -55,7 +55,7 @@
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-news.svg" alt="Open News" height="52"></a>
+  <a href="https://news.hasankarasu.me/"><img src="https://hkupwitqqndmolvtgfsm.supabase.co/storage/v1/object/public/stuff/btn-open-news.svg" alt="Open News" height="52"></a>
 </p>
 
 ---
@@ -67,12 +67,12 @@
 
 Paper & Ink is a local-first productivity and reading suite built with React 19, Vite 8, TypeScript, and Tailwind CSS v4. A FastAPI backend (`server/`) handles **Supabase username authentication** and **server-side Gemini OCR, scanned-PDF extraction, and news summarization**.
 
-| Application | Purpose | Default local URL | Icon source |
-| :--- | :--- | :--- | :--- |
-| **Reader** | Personal library, EPUB/TXT/PDF reading, dictionary lookup, quote saving | `http://localhost:5173` | `reader-web/icon.png` |
-| **Notes** | Tactile notebooks, `perfect-freehand` ink canvas, handwriting OCR, action capture | `http://localhost:5174` | `notes-web/icon.png` |
-| **News** | Calm editorial daily briefing, reading-style AI voice selector, saved stories | `http://localhost:5175` | `news-web/icon.png` |
-| **Backend API (`server/`)** | Username auth proxy (Supabase), Gemini OCR/PDF/news summarization, NewsData/Mediastack proxy | `http://localhost:3001` | none |
+| Application | Purpose | Live URL | Default local URL | Icon source |
+| :--- | :--- | :--- | :--- | :--- |
+| **Reader** | Personal library, EPUB/TXT/PDF reading, dictionary lookup, quote saving | [reader.hasankarasu.me](https://reader.hasankarasu.me/) | `http://localhost:5173` | `reader-web/icon.png` |
+| **Notes** | Tactile notebooks, `perfect-freehand` ink canvas, handwriting OCR, action capture | [notes.hasankarasu.me](https://notes.hasankarasu.me/) | `http://localhost:5174` | `notes-web/icon.png` |
+| **News** | Calm editorial daily briefing, reading-style AI voice selector, saved stories | [news.hasankarasu.me](https://news.hasankarasu.me/) | `http://localhost:5175` | `news-web/icon.png` |
+| **Backend API (`server/`)** | Username auth proxy (Supabase), Gemini OCR/PDF/news summarization, NewsData/Mediastack proxy | — | `http://localhost:3001` | none |
 
 ### Architecture and privacy boundaries
 
@@ -156,8 +156,6 @@ npm install
 npm --prefix reader-web install
 npm --prefix notes-web install
 npm --prefix news-web install
-python -m venv server/.venv
-server/.venv/Scripts/python -m pip install -r server/requirements.txt   # macOS/Linux: server/.venv/bin/python
 ```
 
 **4. Run and verify** from the repository root:
